@@ -1,0 +1,14 @@
+[req]
+distinguished_name = subject
+prompt = no
+
+[subject]
+CN = monitor Local Code Signing
+O = Local Development
+
+[extensions]
+basicConstraints = critical, CA:FALSE
+keyUsage = critical, digitalSignature
+extendedKeyUsage = codeSigning
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid, issuer
