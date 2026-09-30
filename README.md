@@ -1,9 +1,69 @@
 # monitor
 
-A small, local macOS recorder that writes app/window activity, mouse clicks,
-scrolls, copy/paste/cut shortcuts, and periodic screenshots to disk.
+A local desktop activity recorder for macOS and Linux. It records foreground
+app/window changes, mouse clicks, scrolling, copy/paste/cut shortcuts, and
+periodic per-display screenshots. Typed text and clipboard contents are never
+stored.
 
-## Build and run
+## Linux CLI
+
+Linux uses a standalone Rust daemon controlled by an idempotent `monitor` CLI.
+It does not wrap or modify the command used to start an AI agent.
+
+Install the build dependencies first. On Debian/Ubuntu:
+
+```sh
+sudo apt-get install build-essential pkg-config clang libclang-dev \
+  libxcb1-dev libxrandr-dev libdbus-1-dev libpipewire-0.3-dev \
+  libwayland-dev libegl-dev libgbm-dev libx11-dev libxtst-dev
+```
+
+Fedora requires the equivalent `gcc`, `make`, `pkgconf-pkg-config`, `clang`,
+`libxcb-devel`, `libXrandr-devel`, `dbus-devel`, `pipewire-devel`,
+`wayland-devel`, `mesa-libEGL-devel`, `libX11-devel`, and `libXtst-devel`
+packages.
+
+Then install and control the recorder:
+
+```sh
+./scripts/install-linux.sh --agent-integration auto
+monitor doctor --json
+monitor start --json
+monitor status --json
+monitor stop --json
+```
+
+The agent integration is opt-in. `auto` installs the bundled skill for detected
+Codex and Claude clients. Specify `codex` or `claude` explicitly, repeat the
+flag to install both, or omit it to leave all agent configuration untouched.
+The installer never creates a global `AGENTS.md`.
+
+`monitor install` places the binary at `~/.local/bin/monitor` and installs an
+enabled `systemd --user` service. Recording begins only after `monitor start`.
+The service retains start/stop state across login sessions. A StatusNotifier
+tray icon provides the same pause/resume control where the desktop supports
+one. `monitor uninstall` removes the service and binary but preserves data.
+
+Linux data defaults to:
+
+```text
+~/.local/share/monitor/events.sqlite
+~/.local/share/monitor/screenshots/YYYY/MM/DD/
+```
+
+The standard `XDG_DATA_HOME`, `XDG_CONFIG_HOME`, and `XDG_RUNTIME_DIR`
+variables are respected. Export the ordered timeline with `monitor export`.
+Agents without a supported skill location can read the stable command and
+privacy contract with `monitor instructions --json`.
+
+X11 supports foreground windows, global clicks, scrolling, and Ctrl+C/V/X.
+Wayland supports screenshots and session gating where the compositor exposes
+them, but intentionally does not provide passive global input. `monitor doctor`
+and `monitor status` report the live capability of every source.
+
+## macOS app
+
+### Build and run
 
 1. Accept the installed Xcode license: `sudo xcodebuild -license`.
 2. Open `monitor.xcodeproj` and run the `monitor` scheme.
@@ -63,7 +123,7 @@ uses the local `monitor Local Code Signing` identity created by
 the installed copy at `/Applications/monitor.app`. The menu's **Request
 Permissions Again…** item retries the system permission prompts.
 
-## Data
+## macOS data
 
 The database is stored at:
 
